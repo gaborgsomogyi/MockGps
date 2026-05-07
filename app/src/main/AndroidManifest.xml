@@ -36,10 +36,6 @@
             </intent-filter>
         </activity>
 
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="${API_KEY}" />
-
         <service
             android:name=".service.MockLocationService"
             android:enabled="true"

@@ -3,7 +3,7 @@ package com.lilstiffy.mockgps.storage
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import com.google.android.gms.maps.model.LatLng
+import com.lilstiffy.mockgps.model.LatLng
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.lilstiffy.mockgps.extensions.equalTo

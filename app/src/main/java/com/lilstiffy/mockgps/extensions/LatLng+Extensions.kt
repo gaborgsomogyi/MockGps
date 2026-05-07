@@ -1,6 +1,6 @@
 package com.lilstiffy.mockgps.extensions
 
-import com.google.android.gms.maps.model.LatLng
+import com.lilstiffy.mockgps.model.LatLng
 
 fun LatLng.equalTo(other: LatLng): Boolean {
     return (latitude == other.latitude && longitude == other.longitude)

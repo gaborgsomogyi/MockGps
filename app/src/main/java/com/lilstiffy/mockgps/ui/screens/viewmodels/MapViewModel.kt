@@ -4,7 +4,7 @@ import android.location.Address
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.google.android.gms.maps.model.LatLng
+import com.lilstiffy.mockgps.model.LatLng
 import com.lilstiffy.mockgps.extensions.displayString
 import com.lilstiffy.mockgps.service.LocationHelper
 import com.lilstiffy.mockgps.service.MockLocationService

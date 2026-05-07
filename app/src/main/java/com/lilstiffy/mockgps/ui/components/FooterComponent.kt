@@ -31,7 +31,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.android.gms.maps.model.LatLng
+import com.lilstiffy.mockgps.model.LatLng
 import com.lilstiffy.mockgps.extensions.displayString
 import com.lilstiffy.mockgps.extensions.prettyPrint
 import com.lilstiffy.mockgps.service.VibratorService
