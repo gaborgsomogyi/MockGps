@@ -152,8 +152,10 @@ fun MapScreen(
         }
     }
 
-    fun animateCamera() {
-        mapView.controller.animateTo(GeoPoint(markerPosition.latitude, markerPosition.longitude))
+    fun animateCamera(target: LatLng = markerPosition) {
+        mapView.post {
+            mapView.controller.animateTo(GeoPoint(target.latitude, target.longitude), mapView.zoomLevelDouble, 1000L)
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -186,7 +188,7 @@ fun MapScreen(
                     LocationHelper.geocoding(searchTerm) { foundLatLng ->
                         foundLatLng?.let {
                             mapViewModel.updateMarkerPosition(it)
-                            animateCamera()
+                            animateCamera(it)
                         }
                     }
                 }
@@ -261,7 +263,7 @@ fun MapScreen(
                         sheetState.hide()
                         showBottomSheet = false
                     }
-                    animateCamera()
+                    animateCamera(clickedEntry.latLng)
                 }
             )
         }
