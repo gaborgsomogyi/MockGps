@@ -14,12 +14,17 @@ object StorageManager {
     private const val PREF = "gpsprefs"
     private const val KEY_HISTORY = "history"
     private const val KEY_FAVORITES = "favorites"
+    private const val KEY_DARK_MAP = "dark_map"
 
     private lateinit var pref: SharedPreferences
 
     fun initialise(context: Context) {
         pref = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
     }
+
+    var isDarkMap: Boolean
+        get() = pref.getBoolean(KEY_DARK_MAP, false)
+        set(value) = pref.edit { putBoolean(KEY_DARK_MAP, value) }
 
     fun getLatestLocation(): LatLng {
         return locationHistory.lastOrNull() ?: LocationHelper.DEFAULT_LOCATION
