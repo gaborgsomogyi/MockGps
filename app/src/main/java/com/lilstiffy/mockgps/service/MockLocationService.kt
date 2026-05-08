@@ -1,19 +1,25 @@
 package com.lilstiffy.mockgps.service
 
 import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.location.Location
 import android.location.LocationManager
 import android.location.provider.ProviderProperties
 import android.os.Binder
+import android.os.Build
 import android.os.IBinder
 import android.os.SystemClock
 import android.util.Log
 import android.widget.Toast
-import com.lilstiffy.mockgps.model.LatLng
+import androidx.core.app.NotificationCompat
 import com.lilstiffy.mockgps.MockGpsApp
+import com.lilstiffy.mockgps.R
+import com.lilstiffy.mockgps.model.LatLng
 import com.lilstiffy.mockgps.storage.StorageManager
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +30,8 @@ class MockLocationService : Service() {
 
     companion object {
         const val TAG = "MockLocationService"
+        const val NOTIFICATION_ID = 1
+        const val CHANNEL_ID = "mock_gps_channel"
         var instance: MockLocationService? = null
     }
 
@@ -38,6 +46,7 @@ class MockLocationService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        createNotificationChannel()
         Log.d(TAG, "Service created")
     }
 
@@ -62,11 +71,24 @@ class MockLocationService : Service() {
     @OptIn(DelicateCoroutinesApi::class)
     @SuppressLint("MissingPermission")
     private fun startMockingLocation() {
-        // Will be added to location history if not existing.
         StorageManager.addLocationToHistory(latLng)
 
         if (!isMocking) {
             isMocking = true
+
+            val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("MockGPS active")
+                .setContentText("Mocking location: ${latLng.latitude}, ${latLng.longitude}")
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setOngoing(true)
+                .build()
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
+
             GlobalScope.launch(Dispatchers.IO) {
                 mockLocation()
             }
@@ -77,39 +99,22 @@ class MockLocationService : Service() {
     private fun stopMockingLocation() {
         if (isMocking) {
             isMocking = false
+            stopForeground(STOP_FOREGROUND_REMOVE)
             Log.d(TAG, "Mock location stopped")
         }
     }
 
     private fun addTestProvider(): Boolean {
-        var successfullyAdded: Boolean
-
         val providerName = LocationManager.GPS_PROVIDER
-        val requiresNetwork = true
-        val requiresSatellite = false
-        val requiresCell = false
-        val hasMonetaryCost = false
-        val supportsAltitude = false
-        val supportsSpeed = false
-        val supportsBearing = false
-        val powerRequirement = ProviderProperties.POWER_USAGE_HIGH
-        val accuracy = ProviderProperties.ACCURACY_FINE
 
         try {
             locationManager.addTestProvider(
                 providerName,
-                requiresNetwork,
-                requiresSatellite,
-                requiresCell,
-                hasMonetaryCost,
-                supportsAltitude,
-                supportsSpeed,
-                supportsBearing,
-                powerRequirement,
-                accuracy
+                true, false, false, false, false, false, false,
+                ProviderProperties.POWER_USAGE_HIGH,
+                ProviderProperties.ACCURACY_FINE
             )
-            successfullyAdded = true
-            return successfullyAdded
+            return true
         } catch (se: SecurityException) {
             val ctx = MockGpsApp.shared.applicationContext
             GlobalScope.launch(Dispatchers.Main) {
@@ -119,8 +124,7 @@ class MockLocationService : Service() {
                     Toast.LENGTH_SHORT
                 ).show()
             }
-            successfullyAdded = false
-            return successfullyAdded
+            return false
         }
     }
 
@@ -133,7 +137,6 @@ class MockLocationService : Service() {
 
         while (isMocking) {
             val mockLocation = Location(LocationManager.GPS_PROVIDER).apply {
-                // Set your mock coordinates here
                 latitude = latLng.latitude
                 longitude = latLng.longitude
                 altitude = 12.5
@@ -141,14 +144,20 @@ class MockLocationService : Service() {
                 accuracy = 2f
                 elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
             }
-
-            locationManager.setTestProviderLocation(
-                LocationManager.GPS_PROVIDER,
-                mockLocation
-            )
-            // Sleep for a duration to simulate location update frequency
+            locationManager.setTestProviderLocation(LocationManager.GPS_PROVIDER, mockLocation)
             kotlinx.coroutines.delay(200L)
         }
+    }
+
+    private fun createNotificationChannel() {
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            "Mock GPS",
+            NotificationManager.IMPORTANCE_LOW
+        ).apply {
+            description = "Shown while location mocking is active"
+        }
+        getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
     }
 
     inner class MockLocationBinder : Binder() {
